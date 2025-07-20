@@ -1,12 +1,11 @@
 const btn = document.querySelector(".all-btn");
 const input = document.querySelector(".input-box");
-const output = document.querySelector(".output-box")
+const output = document.querySelector(".output-box");
 const historyBtn = document.getElementById("history-btn");
 const KeyboardBtn = document.querySelector("#Keyboard-btn");
 const historyContainer = document.querySelector(".history-container");
 const historyBox = document.getElementById("history");
 const clearHistoryBtn = document.getElementById("clear-history-btn");
-
 
 // all flags
 var historyFlag = 0;
@@ -17,11 +16,11 @@ var noFlag = 0,
   temp;
 historyCount = 0;
 
-
 //All click events
 
 // (1) click event for number
 btn.addEventListener("click", (e) => {
+  e.preventDefault();
   a = e.target.innerHTML;
 
   if (a == "0") {
@@ -73,6 +72,7 @@ btn.addEventListener("click", (e) => {
 // (1) Key event for numbers
 
 document.body.addEventListener("keydown", (e) => {
+  e.preventDefault();
   if (e.key == "0") {
     numbers("0");
   } else if (e.key == "1") {
@@ -110,13 +110,16 @@ document.body.addEventListener("keydown", (e) => {
     signs(".");
   } else if (e.key == "c" || e.key == "Delete") {
     clear();
-  } else if (e.key == "=") {
+  } else if (e.key == "=" || e.key == "Enter") {
     equall();
   } else if (e.key == "Backspace") {
     backspace();
+  } else if (e.key == "H" || e.key == "h") {
+    handleShowHistory();
+  } else if (e.key == "K" || e.key == "k") {
+    handleShowKeyboard();
   }
 });
-
 
 // Function for numbers in input box
 
@@ -143,11 +146,16 @@ function numbers(no) {
 // Function for signs in input box
 
 function signs(sign) {
-  if (sign == "." && dotFlag == 0) {
+  if ((sign == "." || sign == "-") && dotFlag == 0) {
     if (input.innerHTML == "") {
-      input.innerHTML = "0.";
-      dotFlag = 1;
-    } else if (input.innerHTML != "") {
+      if (sign == ".") {
+        input.innerHTML = "0.";
+        dotFlag = 1;
+      } else {
+        input.innerHTML = "-";
+        signFlag = 1;
+      }
+    } else if (input.innerHTML != "" && sign != "-") {
       input.innerHTML += ".";
       dotFlag = 1;
     }
@@ -207,10 +215,28 @@ function equall() {
 //Function that clear the input box  one by one
 
 function backspace() {
+  let lastDigit = input.innerHTML.slice(
+    input.innerHTML.length - 1,
+    input.innerHTML.length
+  );
+  if (lastDigit == "+" || "-" || "/" || "*" || "%") {
+    signFlag = 0;
+  }
   temp = input.innerHTML.slice(0, input.innerHTML.length - 1);
   input.innerHTML = temp;
 }
 
+function handleShowHistory() {
+  if (historyContainer.style.display == "none") {
+    historyContainer.style.display = "block";
+  }
+}
+
+function handleShowKeyboard() {
+  if (historyContainer.style.display == "block") {
+    historyContainer.style.display = "none";
+  }
+}
 
 historyContainer.style.display = "none";
 
@@ -218,44 +244,38 @@ historyBtn.addEventListener("click", () => {
   // console.log("click");
   // console.log("if");
   historyContainer.style.display = "block";
-})
+});
 
 KeyboardBtn.addEventListener("click", () => {
   historyContainer.style.display = "none";
-})
-
-
+});
 
 function createHistoryElement(ip, op) {
   const newHis = document.createElement("div");
   const brr = document.createElement("br");
 
   newHis.style.cursor = "pointer";
-  newHis.innerHTML = (ip);
+  newHis.innerHTML = ip;
   newHis.appendChild(brr);
   const out = op;
-  newHis.innerHTML += (`= ${out} <hr>`);
+  newHis.innerHTML += `= ${out} <hr>`;
 
   historyCount = historyBox.children.length;
   // console.log({ historyCount });
-  localStorage.setItem('historyCount', (historyCount + 1));
-
-
-
+  localStorage.setItem("historyCount", historyCount + 1);
 
   var localHistory = [
     {
       cal: ip,
       ans: op,
-    }
-  ]
+    },
+  ];
 
   keyName = "history" + (historyCount + 1);
 
   localStorage.setItem(keyName, JSON.stringify(localHistory[0]));
 
   // console.log(JSON.parse(localStorage.getItem(keyName)));
-
 
   newHis.addEventListener("click", () => {
     // console.log(output.innerHTML);
@@ -266,27 +286,23 @@ function createHistoryElement(ip, op) {
       if (signFlag) {
         input.innerText += newHis.innerText.split("=")[1];
         signFlag = 0;
-      }
-      else {
+      } else {
         input.innerText = newHis.innerText.split("=")[1];
         output.innerText = "";
       }
-    }
-    else {
+    } else {
       input.innerText = newHis.innerText.split("=")[1];
     }
-  })
+  });
 
   historyBox.appendChild(newHis);
 }
-
 
 function historyStorage() {
   if (input.innerHTML != "" && output.innerHTML != "" && historyFlag == 0) {
     createHistoryElement(input.innerHTML, output.innerHTML);
     historyFlag = 1;
   }
-
 }
 
 clearHistoryBtn.addEventListener("click", () => {
@@ -295,18 +311,14 @@ clearHistoryBtn.addEventListener("click", () => {
     historyBox.innerHTML = "";
     localStorage.clear();
   }
-})
+});
 
-
-
-
-// 
-count = localStorage.getItem('historyCount');
+//
+count = localStorage.getItem("historyCount");
 
 // console.log({ count });
 for (let i = 1; i <= count; i++) {
   data = JSON.parse(localStorage.getItem(`history${i}`));
   // console.log({ data });
-  createHistoryElement(data.cal, data.ans)
+  createHistoryElement(data.cal, data.ans);
 }
-
